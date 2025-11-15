@@ -44,7 +44,8 @@ class BookController extends Controller
 
         $libraries = Library::all();
 
-        return view('books.index', compact('books', 'libraries', 'query', 'libraryId'));
+        return view('books.index', compact('books', 'libraries', 'query', 'libraryId'))
+            ->with('title', 'Browse');
     }
 
     /**
@@ -89,6 +90,7 @@ class BookController extends Controller
     public function show(Book $book)
     {
         $book->load('library');
-        return view('books.show', compact('book'));
+        return view('books.show', compact('book'))
+            ->with('title', 'Book Details');
     }
 }

@@ -20,7 +20,8 @@ class PenaltyController extends Controller
 
         $totalUnpaid = $penalties->where('is_paid', false)->sum('amount');
 
-        return view('penalties.index', compact('penalties', 'totalUnpaid'));
+        return view('penalties.index', compact('penalties', 'totalUnpaid'))
+            ->with('title', 'Penalties');
     }
 
     /**
@@ -35,6 +36,7 @@ class PenaltyController extends Controller
 
         $penalty->load(['loan.book', 'loan.library']);
 
-        return view('penalties.show', compact('penalty'));
+        return view('penalties.show', compact('penalty'))
+            ->with('title', 'Penalty Details');
     }
 }

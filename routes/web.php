@@ -26,6 +26,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
     Route::get('/loans/create/{book}', [LoanController::class, 'create'])->name('loans.create');
     Route::post('/loans/{book}', [LoanController::class, 'store'])->name('loans.store');
+    Route::get('/loans/{loan}/details', [LoanController::class, 'details'])->name('loans.details');
+    Route::get('/loans/{loan}/confirmed', [LoanController::class, 'confirmed'])->name('loans.confirmed');
     Route::get('/loans/{loan}', [LoanController::class, 'show'])->name('loans.show');
 
     // Returns routes
@@ -35,10 +37,13 @@ Route::middleware('auth')->group(function () {
 
     // Payments routes
     Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::post('/payments/loan/{loanId}', [PaymentController::class, 'createForLoan'])->name('payments.createForLoan');
+    Route::post('/payments/free-loan/{loanId}', [PaymentController::class, 'confirmFreeLoan'])->name('payments.confirmFreeLoan');
     Route::post('/payments/delivery/{loanId}', [PaymentController::class, 'createForDelivery'])->name('payments.create.delivery');
     Route::post('/payments/penalty/{penaltyId}', [PaymentController::class, 'createForPenalty'])->name('payments.create.penalty');
     Route::get('/payments/success', [PaymentController::class, 'success'])->name('payments.success');
     Route::get('/payments/failure', [PaymentController::class, 'failure'])->name('payments.failure');
+    Route::post('/payments/{paymentId}/check-status', [PaymentController::class, 'checkStatus'])->name('payments.checkStatus');
 
     // Penalties routes
     Route::get('/penalties', [PenaltyController::class, 'index'])->name('penalties.index');

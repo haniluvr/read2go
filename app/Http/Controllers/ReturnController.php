@@ -25,7 +25,8 @@ class ReturnController extends Controller
                 ->with('error', 'This loan cannot be returned.');
         }
 
-        return view('returns.create', compact('loan'));
+        return view('returns.create', compact('loan'))
+            ->with('title', 'Return Book');
     }
 
     /**

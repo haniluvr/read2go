@@ -20,6 +20,7 @@ class NotificationController extends Controller
         // Mark as read
         Auth::user()->notifications()->where('is_read', false)->update(['is_read' => true]);
 
-        return view('notifications.index', compact('notifications'));
+        return view('notifications.index', compact('notifications'))
+            ->with('title', 'Notifications');
     }
 }

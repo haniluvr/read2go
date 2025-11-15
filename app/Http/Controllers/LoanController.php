@@ -33,7 +33,8 @@ class LoanController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('loans.index', compact('loans'));
+        return view('loans.index', compact('loans'))
+            ->with('title', 'My Shelf');
     }
 
     /**
@@ -55,7 +56,8 @@ class LoanController extends Controller
 
         $barangays = $this->addressValidationService->getBarangays();
 
-        return view('loans.create', compact('book', 'barangays'));
+        return view('loans.create', compact('book', 'barangays'))
+            ->with('title', 'Borrow');
     }
 
     /**
@@ -112,7 +114,7 @@ class LoanController extends Controller
             );
         }
 
-        // Create loan
+        // Create loan with pending_payment status (don't mark book as loaned yet)
         $loan = BookLoan::create([
             'user_id' => $user->id,
             'book_id' => $book->id,
@@ -120,16 +122,15 @@ class LoanController extends Controller
             'delivery_type' => $request->delivery_type,
             'delivery_address' => $request->delivery_type === 'home' ? $request->delivery_address : null,
             'delivery_fee' => $deliveryFee,
-            'borrowed_at' => now(),
-            'due_date' => Carbon::now()->addDays(7),
-            'status' => 'active',
+            'borrowed_at' => null, // Will be set after payment
+            'due_date' => Carbon::now()->addDays(7), // Will be recalculated after payment
+            'status' => 'pending_payment',
         ]);
 
-        // Update book status
-        $book->update(['status' => 'loaned']);
+        // Don't update book status yet - wait for payment confirmation
 
-        return redirect()->route('loans.show', $loan)
-            ->with('success', 'Book loaned successfully!');
+        // Redirect to details page to show summary and proceed to payment
+        return redirect()->route('loans.details', $loan);
     }
 
     /**
@@ -144,6 +145,57 @@ class LoanController extends Controller
 
         $loan->load(['book', 'library', 'penalties', 'deliverySchedules']);
 
-        return view('loans.show', compact('loan'));
+        return view('loans.show', compact('loan'))
+            ->with('title', 'Loan Details');
+    }
+
+    /**
+     * Show loan details with delivery fee summary (before payment)
+     */
+    public function details(BookLoan $loan)
+    {
+        // Ensure user owns this loan
+        if ($loan->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Only show details for pending_payment loans
+        if ($loan->status !== 'pending_payment') {
+            return redirect()->route('loans.show', $loan);
+        }
+
+        $loan->load(['book', 'library']);
+
+        return view('loans.details', compact('loan'))
+            ->with('title', 'Confirm Order');
+    }
+
+    /**
+     * Show delivery confirmation page (after payment)
+     */
+    public function confirmed(BookLoan $loan)
+    {
+        // Ensure user owns this loan
+        if ($loan->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Only show for active loans
+        if ($loan->status !== 'active') {
+            return redirect()->route('loans.show', $loan);
+        }
+
+        $loan->load(['book', 'library', 'deliverySchedules']);
+
+        // Get estimated delivery time
+        $deliverySchedule = $loan->deliverySchedules()
+            ->where('pickup_type', 'delivery')
+            ->where('status', 'pending')
+            ->first();
+
+        $estimatedDelivery = $deliverySchedule ? $deliverySchedule->scheduled_at : now()->addHours(2);
+
+        return view('loans.confirmed', compact('loan', 'estimatedDelivery'))
+            ->with('title', 'Order Confirmed');
     }
 }

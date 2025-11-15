@@ -4,7 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? config('app.name', 'Read2Go') }}</title>
+    <title>
+        @if(isset($title) && $title)
+            {{ $title }} - 
+        @endif
+        Read2Go - Your library, delivered right at your doorstep.
+    </title>
     @vite(['resources/css/app.css'])
 </head>
 <body class="font-sans antialiased bg-primary-50">
